@@ -9,6 +9,19 @@ use Illuminate\Http\Request;
 class PiutangController extends Controller
 {
     /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (! auth()->user() || ! auth()->user()->isAdmin()) {
+                abort(403, 'Unauthorized');
+            }
+            return $next($request);
+        });
+    }
+
+    /**
      * Display a listing of piutang.
      */
     public function index()
@@ -48,16 +61,18 @@ class PiutangController extends Controller
     /**
      * Display the specified piutang.
      */
-    public function show(Piutang $piutang)
+    public function show($id)
     {
+        $piutang = Piutang::findOrFail($id);
         return view('piutang.show', ['piutang' => $piutang]);
     }
 
     /**
      * Show the form for editing the specified piutang.
      */
-    public function edit(Piutang $piutang)
+    public function edit($id)
     {
+        $piutang = Piutang::findOrFail($id);
         $anggotas = Anggota::all();
         return view('piutang.edit', ['piutang' => $piutang, 'anggotas' => $anggotas]);
     }
@@ -65,8 +80,9 @@ class PiutangController extends Controller
     /**
      * Update the specified piutang.
      */
-    public function update(Request $request, Piutang $piutang)
+    public function update(Request $request, $id)
     {
+        $piutang = Piutang::findOrFail($id);
         $validated = $request->validate([
             'anggota_id' => 'required|exists:anggotas,id',
             'jabatan' => 'required|string|in:Militer,PNS,PPPK,Honorer',
@@ -84,8 +100,9 @@ class PiutangController extends Controller
     /**
      * Remove the specified piutang.
      */
-    public function destroy(Piutang $piutang)
+    public function destroy($id)
     {
+        $piutang = Piutang::findOrFail($id);
         $piutang->delete();
 
         return redirect()->route('piutang.index')->with('success', 'Piutang berhasil dihapus');
