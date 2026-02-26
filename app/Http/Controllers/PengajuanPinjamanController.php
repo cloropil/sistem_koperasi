@@ -6,7 +6,9 @@ use App\Models\PengajuanPinjaman;
 use App\Models\Anggota;
 use App\Models\SimpananAnggota;
 use App\Models\Piutang;
+use App\Models\PembayaranPiutang;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PengajuanPinjamanController extends Controller
 {
@@ -43,12 +45,27 @@ class PengajuanPinjamanController extends Controller
         
         // Get list of anggota with outstanding piutang
         $anggotaWithDebt = Piutang::where('status_lunas', false)->pluck('anggota_id')->toArray();
-        
+
+        // Build simpananByAnggota map for frontend auto-fill (id, pokok, wajib, total)
+        $simpananByAnggota = [];
+        foreach ($anggotas as $anggota) {
+            $simpanan = SimpananAnggota::where('anggota_id', $anggota->id)->first();
+            if ($simpanan) {
+                $simpananByAnggota[$anggota->id] = [
+                    'id' => $simpanan->id,
+                    'total' => $simpanan->simpanan_pokok + $simpanan->simpanan_wajib,
+                    'pokok' => $simpanan->simpanan_pokok,
+                    'wajib' => $simpanan->simpanan_wajib,
+                ];
+            }
+        }
+
         return view('pengajuan_pinjaman.create', [
             'anggotas' => $anggotas,
             'simpanans' => $simpanans,
             'piutangs' => $piutangs,
-            'anggotaWithDebt' => $anggotaWithDebt
+            'anggotaWithDebt' => $anggotaWithDebt,
+            'simpananByAnggota' => $simpananByAnggota,
         ]);
     }
 
@@ -61,6 +78,7 @@ class PengajuanPinjamanController extends Controller
             'anggota_id' => 'required|exists:anggotas,id',
             'simpanan_id' => 'nullable|exists:simpanan_anggotas,id',
             'jumlah_pengajuan' => 'required|numeric|min:0',
+            'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
             'status' => 'required|string|in:pending,approved,rejected',
         ]);
 
@@ -68,32 +86,41 @@ class PengajuanPinjamanController extends Controller
         $existingDebt = Piutang::where('anggota_id', $validated['anggota_id'])
             ->where('status_lunas', false)
             ->first();
-        
-        if ($existingDebt) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['anggota_id' => "Anggota masih memiliki tagihan sebesar Rp " . number_format($existingDebt->sisa_piutang, 0, ',', '.') . ". Harap lunasi terlebih dahulu."]);
-        }
 
-        // Validasi maksimal pinjaman berdasarkan jabatan
-        $piutang = Piutang::where('anggota_id', $validated['anggota_id'])->first();
-        if ($piutang) {
-            // Hitung total simpanan untuk Honorer
-            $totalSimpanan = 0;
-            if ($validated['simpanan_id']) {
-                $simpanan = SimpananAnggota::find($validated['simpanan_id']);
+        // Hitung total simpanan (untuk Honorer rule)
+        $totalSimpanan = 0;
+        if ($validated['simpanan_id']) {
+            $simpanan = SimpananAnggota::find($validated['simpanan_id']);
+            $totalSimpanan = ($simpanan->simpanan_pokok ?? 0) + ($simpanan->simpanan_wajib ?? 0);
+        } else {
+            $simpanan = SimpananAnggota::where('anggota_id', $validated['anggota_id'])->first();
+            if ($simpanan) {
                 $totalSimpanan = ($simpanan->simpanan_pokok ?? 0) + ($simpanan->simpanan_wajib ?? 0);
             }
-
-            $maxPinjaman = Piutang::getMaxPinjamanByJabatan($piutang->jabatan, $totalSimpanan);
-            
-            if ($validated['jumlah_pengajuan'] > $maxPinjaman) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['jumlah_pengajuan' => "Maksimal pinjaman untuk {$piutang->jabatan} adalah Rp " . number_format($maxPinjaman, 0, ',', '.')]);
-            }
         }
 
+        // Ambil jabatan dari anggota (jika belum ada piutang sebelumnya)
+        $anggota = Anggota::find($validated['anggota_id']);
+        $jabatan = $anggota ? $anggota->jabatan : null;
+
+        // Determine max pinjaman
+        $maxPinjaman = Piutang::getMaxPinjamanByJabatan($jabatan, $totalSimpanan);
+
+        // Jika anggota punya utang yang belum lunas -> buat pengajuan dengan status 'rejected'
+        if ($existingDebt) {
+            $validated['status'] = 'rejected';
+            $pengajuan = PengajuanPinjaman::create($validated);
+            return redirect()->route('pengajuan_pinjaman.index')->with('warning', 'Pengajuan otomatis ditolak karena anggota masih memiliki piutang belum lunas.');
+        }
+
+        // Jika jumlah pengajuan melebihi maksimum -> buat pengajuan dengan status 'rejected'
+        if ($maxPinjaman > 0 && $validated['jumlah_pengajuan'] > $maxPinjaman) {
+            $validated['status'] = 'rejected';
+            $pengajuan = PengajuanPinjaman::create($validated);
+            return redirect()->route('pengajuan_pinjaman.index')->with('warning', 'Pengajuan otomatis ditolak karena melebihi batas maksimal pinjaman untuk jabatan/ketentuan anggota.');
+        }
+
+        // Jika lolos semua, simpan seperti biasa
         PengajuanPinjaman::create($validated);
 
         return redirect()->route('pengajuan_pinjaman.index')->with('success', 'Pengajuan pinjaman berhasil ditambahkan');
@@ -120,13 +147,28 @@ class PengajuanPinjamanController extends Controller
         
         // Get list of anggota with outstanding piutang
         $anggotaWithDebt = Piutang::where('status_lunas', false)->pluck('anggota_id')->toArray();
-        
+
+        // Build simpananByAnggota map for frontend auto-fill (id, pokok, wajib, total)
+        $simpananByAnggota = [];
+        foreach ($anggotas as $anggota) {
+            $simpanan = SimpananAnggota::where('anggota_id', $anggota->id)->first();
+            if ($simpanan) {
+                $simpananByAnggota[$anggota->id] = [
+                    'id' => $simpanan->id,
+                    'total' => $simpanan->simpanan_pokok + $simpanan->simpanan_wajib,
+                    'pokok' => $simpanan->simpanan_pokok,
+                    'wajib' => $simpanan->simpanan_wajib,
+                ];
+            }
+        }
+
         return view('pengajuan_pinjaman.edit', [
             'pengajuan' => $pengajuan_pinjaman,
             'anggotas' => $anggotas,
             'simpanans' => $simpanans,
             'piutangs' => $piutangs,
-            'anggotaWithDebt' => $anggotaWithDebt
+            'anggotaWithDebt' => $anggotaWithDebt,
+            'simpananByAnggota' => $simpananByAnggota,
         ]);
     }
 
@@ -140,44 +182,73 @@ class PengajuanPinjamanController extends Controller
             'anggota_id' => 'required|exists:anggotas,id',
             'simpanan_id' => 'nullable|exists:simpanan_anggotas,id',
             'jumlah_pengajuan' => 'required|numeric|min:0',
+            'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
             'status' => 'required|string|in:pending,approved,rejected',
         ]);
 
         // Validasi maksimal pinjaman berdasarkan jabatan
-        $piutang = Piutang::where('anggota_id', $validated['anggota_id'])->first();
-        if ($piutang) {
-            // Hitung total simpanan untuk Honorer
-            $totalSimpanan = 0;
-            if ($validated['simpanan_id']) {
-                $simpanan = SimpananAnggota::find($validated['simpanan_id']);
-                $totalSimpanan = ($simpanan->simpanan_pokok ?? 0) + ($simpanan->simpanan_wajib ?? 0);
-            }
+        // Ambil jabatan dari anggota (bukan hanya dari piutang yang sudah ada)
+        $anggota = Anggota::find($validated['anggota_id']);
+        $jabatan = $anggota ? $anggota->jabatan : null;
 
-            $maxPinjaman = Piutang::getMaxPinjamanByJabatan($piutang->jabatan, $totalSimpanan);
-            
-            if ($validated['jumlah_pengajuan'] > $maxPinjaman) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['jumlah_pengajuan' => "Maksimal pinjaman untuk {$piutang->jabatan} adalah Rp " . number_format($maxPinjaman, 0, ',', '.')]);
+        // Hitung total simpanan untuk Honorer
+        $totalSimpanan = 0;
+        if ($validated['simpanan_id']) {
+            $simpanan = SimpananAnggota::find($validated['simpanan_id']);
+            $totalSimpanan = ($simpanan->simpanan_pokok ?? 0) + ($simpanan->simpanan_wajib ?? 0);
+        } else {
+            $simpanan = SimpananAnggota::where('anggota_id', $validated['anggota_id'])->first();
+            if ($simpanan) {
+                $totalSimpanan = ($simpanan->simpanan_pokok ?? 0) + ($simpanan->simpanan_wajib ?? 0);
             }
         }
 
+        $maxPinjaman = Piutang::getMaxPinjamanByJabatan($jabatan, $totalSimpanan);
+
+        // Jika max dilanggar saat update dan status diminta 'approved', ubah jadi 'rejected'
+        if ($validated['status'] === 'approved' && $maxPinjaman > 0 && $validated['jumlah_pengajuan'] > $maxPinjaman) {
+            $validated['status'] = 'rejected';
+        }
+
+        // Simpan status lama sebelum update
+        $oldStatus = $pengajuan_pinjaman->status;
         $pengajuan_pinjaman->update($validated);
 
         // If status changed to 'approved', create piutang
-        if ($validated['status'] === 'approved' && $pengajuan_pinjaman->status !== 'approved') {
+        if ($validated['status'] === 'approved' && $oldStatus !== 'approved') {
             $piutang = Piutang::where('anggota_id', $validated['anggota_id'])->first();
+            $jab = $piutang ? $piutang->jabatan : ($anggota ? $anggota->jabatan : null);
             
-            if ($piutang) {
-                // Create new piutang record
-                Piutang::create([
+            if ($jab) {
+                $pembayaranPerbulan = 0;
+                if ($validated['jangka_pinjaman'] && $validated['jangka_pinjaman'] > 0) {
+                    $pembayaranPerbulan = $validated['jumlah_pengajuan'] / $validated['jangka_pinjaman'];
+                }
+
+                $piutangBaru = Piutang::create([
                     'anggota_id' => $validated['anggota_id'],
-                    'jabatan' => $piutang->jabatan,
+                    'jabatan' => $jab,
                     'jumlah_pinjam' => $validated['jumlah_pengajuan'],
                     'sisa_piutang' => $validated['jumlah_pengajuan'],
-                    'pembayaran_perbulan' => 0, // Admin bisa set nanti
+                    'pembayaran_perbulan' => $pembayaranPerbulan,
+                    'jangka_pinjaman' => $validated['jangka_pinjaman'],
                     'status_lunas' => false,
                 ]);
+
+                // Generate jadwal pembayaran per bulan
+                // pertama jatuh tempo satu bulan setelah persetujuan
+                $tanggalMulai = Carbon::now()->addMonth();
+                for ($bulan = 1; $bulan <= $validated['jangka_pinjaman']; $bulan++) {
+                    PembayaranPiutang::create([
+                        'piutang_id' => $piutangBaru->id,
+                        'bulan_ke' => $bulan,
+                        'tanggal_jatuh_tempo' => $tanggalMulai->copy()->addMonths($bulan - 1)->endOfMonth(),
+                        'jumlah_pembayaran' => $pembayaranPerbulan,
+                        'jumlah_dibayar' => 0,
+                        'status' => 'pending',
+                        'tanggal_pembayaran' => null,
+                    ]);
+                }
             }
         }
 

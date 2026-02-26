@@ -57,6 +57,20 @@
                 </div>
 
                 <div class="form-group mb-3">
+                    <label for="jangka_pinjaman">Jangka Waktu Pinjaman (Bulan)</label>
+                    <select class="form-control" id="jangka_pinjaman" name="jangka_pinjaman" required>
+                        <option value="">Pilih Jangka Waktu</option>
+                        <option value="3" {{ $pengajuan->jangka_pinjaman == 3 ? 'selected' : '' }}>3 Bulan</option>
+                        <option value="6" {{ $pengajuan->jangka_pinjaman == 6 ? 'selected' : '' }}>6 Bulan</option>
+                        <option value="12" {{ $pengajuan->jangka_pinjaman == 12 ? 'selected' : '' }}>12 Bulan (1 Tahun)</option>
+                        <option value="24" {{ $pengajuan->jangka_pinjaman == 24 ? 'selected' : '' }}>24 Bulan (2 Tahun)</option>
+                        <option value="36" {{ $pengajuan->jangka_pinjaman == 36 ? 'selected' : '' }}>36 Bulan (3 Tahun)</option>
+                        <option value="48" {{ $pengajuan->jangka_pinjaman == 48 ? 'selected' : '' }}>48 Bulan (4 Tahun)</option>
+                        <option value="60" {{ $pengajuan->jangka_pinjaman == 60 ? 'selected' : '' }}>60 Bulan (5 Tahun)</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
                     <label for="status">Status</label>
                     <select class="form-control" id="status" name="status" required>
                         <option value="pending" {{ $pengajuan->status == 'pending' ? 'selected' : '' }}>Pending</option>

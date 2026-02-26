@@ -20,6 +20,7 @@ class PengajuanPinjaman extends Model
         'anggota_id',
         'simpanan_id',
         'jumlah_pengajuan',
+        'jangka_pinjaman',
         'status',
     ];
 

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AnggotaController;
 use App\Http\Controllers\SimpananController;
 use App\Http\Controllers\PiutangController;
+use App\Http\Controllers\PembayaranPiutangController;
 use App\Http\Controllers\PengajuanPinjamanController;
 use App\Http\Controllers\DashboardController;
 
@@ -48,6 +49,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/piutang/{id}/edit', [PiutangController::class, 'edit'])->name('piutang.edit');
     Route::put('/piutang/{id}', [PiutangController::class, 'update'])->name('piutang.update');
     Route::delete('/piutang/{id}', [PiutangController::class, 'destroy'])->name('piutang.destroy');
+
+    // Pembayaran Piutang (nested under piutang)
+    Route::put('/piutang/{piutang}/pembayaran/{pembayaran}', [PembayaranPiutangController::class, 'update'])->name('pembayaran_piutang.update');
     
     // Pengajuan Pinjaman Routes
     Route::get('/pengajuan_pinjaman', [PengajuanPinjamanController::class, 'index'])->name('pengajuan_pinjaman.index');

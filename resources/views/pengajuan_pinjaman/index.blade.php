@@ -18,6 +18,7 @@
                         <th>No</th>
                         <th>Nama Anggota</th>
                         <th>Jumlah Pengajuan</th>
+                        <th>Jangka Waktu (Bulan)</th>
                         <th>Simpanan Anggota</th>
                         <th>Status</th>
                         <th>Tanggal Pengajuan</th>
@@ -30,6 +31,7 @@
                         <td>{{ $key+1 }}</td>
                         <td>{{ $pengajuan->anggota->nama }}</td>
                         <td>Rp. {{ number_format($pengajuan->jumlah_pengajuan, 0, ',', '.') }}</td>
+                        <td>{{ $pengajuan->jangka_pinjaman ? $pengajuan->jangka_pinjaman . ' bulan' : '-' }}</td>
                         <td>
                             @if($pengajuan->simpanan)
                                 Rp. {{ number_format($pengajuan->simpanan->simpanan_pokok + $pengajuan->simpanan->simpanan_wajib, 0, ',', '.') }}

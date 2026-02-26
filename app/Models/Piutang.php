@@ -15,12 +15,18 @@ class Piutang extends Model
         'jumlah_pinjam',
         'sisa_piutang',
         'pembayaran_perbulan',
+        'jangka_pinjaman',
         'status_lunas',
     ];
 
     public function anggota()
     {
         return $this->belongsTo(Anggota::class);
+    }
+
+    public function pembayarans()
+    {
+        return $this->hasMany(PembayaranPiutang::class)->orderBy('bulan_ke');
     }
 
     /**

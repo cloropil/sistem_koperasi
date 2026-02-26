@@ -20,6 +20,7 @@
                         <th>Jabatan</th>
                         <th>Jumlah Pinjam</th>
                         <th>Sisa Piutang</th>
+                        <th>Jangka Waktu (Bulan)</th>
                         <th>Pembayaran/Bulan</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -33,6 +34,7 @@
                         <td>{{ $piutang->jabatan }}</td>
                         <td>Rp. {{ number_format($piutang->jumlah_pinjam, 0, ',', '.') }}</td>
                         <td>Rp. {{ number_format($piutang->sisa_piutang, 0, ',', '.') }}</td>
+                        <td>{{ $piutang->jangka_pinjaman ? $piutang->jangka_pinjaman . ' bulan' : '-' }}</td>
                         <td>Rp. {{ number_format($piutang->pembayaran_perbulan, 0, ',', '.') }}</td>
                         <td>
                             @if($piutang->status_lunas)
