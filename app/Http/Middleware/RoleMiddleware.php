@@ -17,7 +17,7 @@ class RoleMiddleware
      * @param  string  $roles
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, string $roles)
+    public function handle(Request $request, Closure $next, string $roles = 'user')
     {
         $user = Auth::user();
 
@@ -26,6 +26,7 @@ class RoleMiddleware
         }
 
         $allowed = explode(',', $roles);
+        $allowed = array_map('trim', $allowed);
 
         if (! in_array($user->role, $allowed, true)) {
             abort(403, 'Unauthorized');
