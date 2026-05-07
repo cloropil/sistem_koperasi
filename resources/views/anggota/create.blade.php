@@ -29,13 +29,49 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="status">Status</label>
-                    <input type="text" class="form-control" id="status" name="status" placeholder="aktif/non-aktif" required>
+                    <label>Status</label>
+                    <div class="form-check">
+                        <input class="form-check-input status-checkbox" type="checkbox" name="status[]" value="aktif" id="status_aktif">
+                        <label class="form-check-label" for="status_aktif">
+                            Aktif
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input status-checkbox" type="checkbox" name="status[]" value="non-aktif" id="status_non_aktif">
+                        <label class="form-check-label" for="status_non_aktif">
+                            Non-Aktif
+                        </label>
+                    </div>
+                    <input type="hidden" name="status" id="status_hidden" required>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="jabatan">Jabatan</label>
-                    <input type="text" class="form-control" id="jabatan" name="jabatan" required>
+                    <label>Jabatan</label>
+                    <div class="form-check">
+                        <input class="form-check-input jabatan-checkbox" type="checkbox" name="jabatan[]" value="Militer" id="jabatan_militer">
+                        <label class="form-check-label" for="jabatan_militer">
+                            Militer
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input jabatan-checkbox" type="checkbox" name="jabatan[]" value="PNS" id="jabatan_pns">
+                        <label class="form-check-label" for="jabatan_pns">
+                            PNS (Pegawai Negeri Sipil)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input jabatan-checkbox" type="checkbox" name="jabatan[]" value="PPPK" id="jabatan_pppk">
+                        <label class="form-check-label" for="jabatan_pppk">
+                            PPPK (Pemerintah dengan Perjanjian Kerja)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input jabatan-checkbox" type="checkbox" name="jabatan[]" value="Honorer" id="jabatan_honorer">
+                        <label class="form-check-label" for="jabatan_honorer">
+                            Honorer
+                        </label>
+                    </div>
+                    <input type="hidden" name="jabatan" id="jabatan_hidden" required>
                 </div>
 
                 <div class="form-group mb-3">
@@ -54,4 +90,52 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle jabatan checkboxes
+    const jabatanCheckboxes = document.querySelectorAll('.jabatan-checkbox');
+    const jabatanHiddenInput = document.getElementById('jabatan_hidden');
+    
+    jabatanCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Uncheck all other checkboxes
+            jabatanCheckboxes.forEach(cb => {
+                if (cb !== this) {
+                    cb.checked = false;
+                }
+            });
+            
+            // Update hidden input
+            if (this.checked) {
+                jabatanHiddenInput.value = this.value;
+            } else {
+                jabatanHiddenInput.value = '';
+            }
+        });
+    });
+
+    // Handle status checkboxes
+    const statusCheckboxes = document.querySelectorAll('.status-checkbox');
+    const statusHiddenInput = document.getElementById('status_hidden');
+    
+    statusCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Uncheck all other checkboxes
+            statusCheckboxes.forEach(cb => {
+                if (cb !== this) {
+                    cb.checked = false;
+                }
+            });
+            
+            // Update hidden input
+            if (this.checked) {
+                statusHiddenInput.value = this.value;
+            } else {
+                statusHiddenInput.value = '';
+            }
+        });
+    });
+});
+</script>
 @endsection

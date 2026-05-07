@@ -74,6 +74,7 @@
                     <label for="status">Status</label>
                     <select class="form-control" id="status" name="status" required>
                         <option value="pending" {{ $pengajuan->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="process" {{ $pengajuan->status == 'process' ? 'selected' : '' }}>Process</option>
                         <option value="approved" {{ $pengajuan->status == 'approved' ? 'selected' : '' }}>Approved</option>
                         <option value="rejected" {{ $pengajuan->status == 'rejected' ? 'selected' : '' }}>Rejected</option>
                     </select>

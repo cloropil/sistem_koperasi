@@ -74,6 +74,7 @@
                     <label for="status">Status</label>
                     <select class="form-control" id="status" name="status" required>
                         <option value="pending">Pending</option>
+                        <option value="process">Process</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
                     </select>

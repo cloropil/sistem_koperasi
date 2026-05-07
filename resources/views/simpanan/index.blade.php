@@ -45,7 +45,7 @@
                                             <td>{{ $simpanan->anggota->jabatan }}</td>
                                             <td>Rp. {{ number_format($simpanan->simpanan_pokok, 0, ',', '.') }}</td>
                                             <td>Rp. {{ number_format($simpanan->simpanan_wajib, 0, ',', '.') }}</td>
-                                            <td><strong>Rp. {{ number_format($simpanan->simpanan_pokok + $simpanan->simpanan_wajib, 0, ',', '.') }}</strong></td>
+                                            <td><strong>Rp. {{ number_format($simpanan->getTotalSimpanan(), 0, ',', '.') }}</strong></td>
                                             <td>
                                                 <a class="btn btn-info btn-sm" href="{{ route('simpanan.show', $simpanan->id) }}">Show</a>
                                                 <a class="btn btn-warning btn-sm" href="{{ route('simpanan.edit', $simpanan->id) }}">Edit</a>
@@ -63,7 +63,7 @@
                                             <td colspan="3"><strong>Subtotal {{ $jabatanGroup }}</strong></td>
                                             <td><strong>Rp. {{ number_format(collect($simpanansGroup)->sum('simpanan_pokok'), 0, ',', '.') }}</strong></td>
                                             <td><strong>Rp. {{ number_format(collect($simpanansGroup)->sum('simpanan_wajib'), 0, ',', '.') }}</strong></td>
-                                            <td colspan="2"><strong>Rp. {{ number_format(collect($simpanansGroup)->sum(function($s) { return $s->simpanan_pokok + $s->simpanan_wajib; }), 0, ',', '.') }}</strong></td>
+                                            <td colspan="2"><strong>Rp. {{ number_format(collect($simpanansGroup)->sum(function($s) { return $s->getTotalSimpanan(); }), 0, ',', '.') }}</strong></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -77,7 +77,7 @@
             <!-- Total keseluruhan -->
             <div class="alert alert-info mt-3">
                 <strong>Total Keseluruhan Simpanan:</strong> 
-                Rp. {{ number_format($simpanans->sum(function($s) { return $s->simpanan_pokok + $s->simpanan_wajib; }), 0, ',', '.') }}
+                Rp. {{ number_format($simpanans->sum(function($s) { return $s->getTotalSimpanan(); }), 0, ',', '.') }}
             </div>
         </div>
     </div>

@@ -46,7 +46,7 @@ class AnggotaController extends Controller
             'nama' => 'required|string|max:255',
             'nip' => 'required|string|unique:anggotas,nip|max:255',
             'status' => 'required|string',
-            'jabatan' => 'required|string',
+            'jabatan' => 'required|string|in:Militer,PNS,PPPK,Honorer',
             'nomor_hp' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
         ]);
@@ -84,7 +84,7 @@ class AnggotaController extends Controller
             'nama' => 'required|string|max:255',
             'nip' => 'required|string|unique:anggotas,nip,' . $anggota->id . '|max:255',
             'status' => 'required|string',
-            'jabatan' => 'required|string',
+            'jabatan' => 'required|string|in:Militer,PNS,PPPK,Honorer',
             'nomor_hp' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
         ]);

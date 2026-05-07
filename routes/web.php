@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/piutang/{id}', [PiutangController::class, 'destroy'])->name('piutang.destroy');
 
     // Pembayaran Piutang (nested under piutang)
+    Route::post('/piutang/{piutang}/pembayaran', [PembayaranPiutangController::class, 'store'])->name('pembayaran_piutang.store');
     Route::put('/piutang/{piutang}/pembayaran/{pembayaran}', [PembayaranPiutangController::class, 'update'])->name('pembayaran_piutang.update');
     
     // Pengajuan Pinjaman Routes

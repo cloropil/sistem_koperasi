@@ -53,7 +53,7 @@ class PengajuanPinjamanController extends Controller
             if ($simpanan) {
                 $simpananByAnggota[$anggota->id] = [
                     'id' => $simpanan->id,
-                    'total' => $simpanan->simpanan_pokok + $simpanan->simpanan_wajib,
+                    'total' => $simpanan->getTotalSimpanan(),
                     'pokok' => $simpanan->simpanan_pokok,
                     'wajib' => $simpanan->simpanan_wajib,
                 ];
@@ -79,7 +79,7 @@ class PengajuanPinjamanController extends Controller
             'simpanan_id' => 'nullable|exists:simpanan_anggotas,id',
             'jumlah_pengajuan' => 'required|numeric|min:0',
             'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
-            'status' => 'required|string|in:pending,approved,rejected',
+            'status' => 'required|string|in:pending,process,approved,rejected',
         ]);
 
         // Check jika anggota masih punya utang yang belum lunas
@@ -155,7 +155,7 @@ class PengajuanPinjamanController extends Controller
             if ($simpanan) {
                 $simpananByAnggota[$anggota->id] = [
                     'id' => $simpanan->id,
-                    'total' => $simpanan->simpanan_pokok + $simpanan->simpanan_wajib,
+                    'total' => $simpanan->getTotalSimpanan(),
                     'pokok' => $simpanan->simpanan_pokok,
                     'wajib' => $simpanan->simpanan_wajib,
                 ];
@@ -183,7 +183,7 @@ class PengajuanPinjamanController extends Controller
             'simpanan_id' => 'nullable|exists:simpanan_anggotas,id',
             'jumlah_pengajuan' => 'required|numeric|min:0',
             'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
-            'status' => 'required|string|in:pending,approved,rejected',
+            'status' => 'required|string|in:pending,process,approved,rejected',
         ]);
 
         // Validasi maksimal pinjaman berdasarkan jabatan
@@ -214,12 +214,10 @@ class PengajuanPinjamanController extends Controller
         $oldStatus = $pengajuan_pinjaman->status;
         $pengajuan_pinjaman->update($validated);
 
-        // If status changed to 'approved', create piutang
+        // If status changed to 'approved', create piutang and deduct from savings
         if ($validated['status'] === 'approved' && $oldStatus !== 'approved') {
-            $piutang = Piutang::where('anggota_id', $validated['anggota_id'])->first();
-            $jab = $piutang ? $piutang->jabatan : ($anggota ? $anggota->jabatan : null);
             
-            if ($jab) {
+            if ($jabatan) {
                 $pembayaranPerbulan = 0;
                 if ($validated['jangka_pinjaman'] && $validated['jangka_pinjaman'] > 0) {
                     $pembayaranPerbulan = $validated['jumlah_pengajuan'] / $validated['jangka_pinjaman'];
@@ -227,7 +225,7 @@ class PengajuanPinjamanController extends Controller
 
                 $piutangBaru = Piutang::create([
                     'anggota_id' => $validated['anggota_id'],
-                    'jabatan' => $jab,
+                    'jabatan' => $jabatan,
                     'jumlah_pinjam' => $validated['jumlah_pengajuan'],
                     'sisa_piutang' => $validated['jumlah_pengajuan'],
                     'pembayaran_perbulan' => $pembayaranPerbulan,
@@ -235,19 +233,10 @@ class PengajuanPinjamanController extends Controller
                     'status_lunas' => false,
                 ]);
 
-                // Generate jadwal pembayaran per bulan
-                // pertama jatuh tempo satu bulan setelah persetujuan
-                $tanggalMulai = Carbon::now()->addMonth();
-                for ($bulan = 1; $bulan <= $validated['jangka_pinjaman']; $bulan++) {
-                    PembayaranPiutang::create([
-                        'piutang_id' => $piutangBaru->id,
-                        'bulan_ke' => $bulan,
-                        'tanggal_jatuh_tempo' => $tanggalMulai->copy()->addMonths($bulan - 1)->endOfMonth(),
-                        'jumlah_pembayaran' => $pembayaranPerbulan,
-                        'jumlah_dibayar' => 0,
-                        'status' => 'pending',
-                        'tanggal_pembayaran' => null,
-                    ]);
+                // Deduct loan amount from member's total savings
+                $simpanan = SimpananAnggota::where('anggota_id', $validated['anggota_id'])->first();
+                if ($simpanan) {
+                    $simpanan->decrement('total_simpanan', $validated['jumlah_pengajuan']);
                 }
             }
         }

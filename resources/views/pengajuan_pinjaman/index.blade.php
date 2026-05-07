@@ -42,6 +42,8 @@
                         <td>
                             @if($pengajuan->status == 'pending')
                                 <span class="badge bg-warning">Pending</span>
+                            @elseif($pengajuan->status == 'process')
+                                <span class="badge bg-primary">Process</span>
                             @elseif($pengajuan->status == 'approved')
                                 <span class="badge bg-success">Approved</span>
                             @else

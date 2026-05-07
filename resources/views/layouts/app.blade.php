@@ -90,6 +90,36 @@
             </div>
         </nav>
 
+        <div id="floating-calculator" class="calculator-panel">
+            <div class="calculator-header">
+                <span>Kalkulator</span>
+                <button type="button" id="calculator-close" class="btn-close" aria-label="Close"></button>
+            </div>
+            <input type="text" class="calculator-display" readonly value="0">
+            <div class="calculator-grid">
+                <button type="button" class="calculator-button" data-action="clear">C</button>
+                <button type="button" class="calculator-button" data-action="delete">DEL</button>
+                <button type="button" class="calculator-button" data-value="÷">÷</button>
+                <button type="button" class="calculator-button" data-value="×">×</button>
+                <button type="button" class="calculator-button" data-value="7">7</button>
+                <button type="button" class="calculator-button" data-value="8">8</button>
+                <button type="button" class="calculator-button" data-value="9">9</button>
+                <button type="button" class="calculator-button" data-value="-">-</button>
+                <button type="button" class="calculator-button" data-value="4">4</button>
+                <button type="button" class="calculator-button" data-value="5">5</button>
+                <button type="button" class="calculator-button" data-value="6">6</button>
+                <button type="button" class="calculator-button" data-value="+">+</button>
+                <button type="button" class="calculator-button" data-value="1">1</button>
+                <button type="button" class="calculator-button" data-value="2">2</button>
+                <button type="button" class="calculator-button" data-value="3">3</button>
+                <button type="button" class="calculator-button" data-action="equals">=</button>
+                <button type="button" class="calculator-button zero-button" data-value="0">0</button>
+                <button type="button" class="calculator-button" data-value=".">.</button>
+            </div>
+        </div>
+
+        <button id="calculator-toggle" class="calculator-toggle" aria-label="Buka Kalkulator">+</button>
+
         <main class="py-4">
             @yield('content')
         </main>

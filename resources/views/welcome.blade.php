@@ -259,20 +259,20 @@
                 <div class="auth-buttons">
                     <a href="{{ route('login') }}" class="btn btn-login">Masuk</a>
                     <div class="or-divider">
-                        <span>atau</span>
-                    </div>
-                    @if (Route::has('register'))
+                        <!-- <span>atau</span> -->
+                    <!-- </div> -->
+                    <!-- @if (Route::has('register'))
                         <a href="{{ route('register') }}" class="btn btn-register">Daftar Akun Baru</a>
-                    @endif
+                    @endif -->
                 </div>
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; line-height: 1.6;">
+                <!-- <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; line-height: 1.6;">
                     <p><strong>Demo Account:</strong></p>
                     <p>Admin: admin@example.com</p>
                     <p>Password: password</p>
                     <hr style="margin: 10px 0; border: none; border-top: 1px solid #ddd;">
                     <p><strong>User: user@example.com</strong></p>
                     <p>Password: password</p>
-                </div>
+                </div> -->
             @endauth
         </div>
     </div>
