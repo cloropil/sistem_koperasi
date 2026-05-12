@@ -77,7 +77,7 @@ class PengajuanPinjamanController extends Controller
         $validated = $request->validate([
             'anggota_id' => 'required|exists:anggotas,id',
             'simpanan_id' => 'nullable|exists:simpanan_anggotas,id',
-            'jumlah_pengajuan' => 'required|numeric|min:0',
+            'jumlah_pengajuan' => 'required|numeric|min:1000000',
             'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
             'status' => 'required|string|in:pending,process,approved,rejected',
         ]);
@@ -104,7 +104,14 @@ class PengajuanPinjamanController extends Controller
         $jabatan = $anggota ? $anggota->jabatan : null;
 
         // Determine max pinjaman
-        $maxPinjaman = Piutang::getMaxPinjamanByJabatan($jabatan, $totalSimpanan);
+        if ($jabatan === 'Honorer') {
+            // Cek syarat untuk Honorer: bergabung >=6 bulan dan saldo >=900.000
+            $sixMonthsAgo = now()->subMonths(6);
+            $isEligible = $anggota && $anggota->created_at <= $sixMonthsAgo && $totalSimpanan >= 900000;
+            $maxPinjaman = $isEligible ? 1000000 : $totalSimpanan;
+        } else {
+            $maxPinjaman = Piutang::getMaxPinjamanByJabatan($jabatan, $totalSimpanan);
+        }
 
         // Jika anggota punya utang yang belum lunas -> buat pengajuan dengan status 'rejected'
         if ($existingDebt) {
@@ -181,7 +188,7 @@ class PengajuanPinjamanController extends Controller
         $validated = $request->validate([
             'anggota_id' => 'required|exists:anggotas,id',
             'simpanan_id' => 'nullable|exists:simpanan_anggotas,id',
-            'jumlah_pengajuan' => 'required|numeric|min:0',
+            'jumlah_pengajuan' => 'required|numeric|min:1000000',
             'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
             'status' => 'required|string|in:pending,process,approved,rejected',
         ]);
@@ -203,7 +210,15 @@ class PengajuanPinjamanController extends Controller
             }
         }
 
-        $maxPinjaman = Piutang::getMaxPinjamanByJabatan($jabatan, $totalSimpanan);
+        // Determine max pinjaman
+        if ($jabatan === 'Honorer') {
+            // Cek syarat untuk Honorer: bergabung >=6 bulan dan saldo >=900.000
+            $sixMonthsAgo = now()->subMonths(6);
+            $isEligible = $anggota && $anggota->created_at <= $sixMonthsAgo && $totalSimpanan >= 900000;
+            $maxPinjaman = $isEligible ? 1000000 : $totalSimpanan;
+        } else {
+            $maxPinjaman = Piutang::getMaxPinjamanByJabatan($jabatan, $totalSimpanan);
+        }
 
         // Jika max dilanggar saat update dan status diminta 'approved', ubah jadi 'rejected'
         if ($validated['status'] === 'approved' && $maxPinjaman > 0 && $validated['jumlah_pengajuan'] > $maxPinjaman) {
@@ -212,7 +227,28 @@ class PengajuanPinjamanController extends Controller
 
         // Simpan status lama sebelum update
         $oldStatus = $pengajuan_pinjaman->status;
+        $oldJangkaPinjaman = $pengajuan_pinjaman->jangka_pinjaman;
         $pengajuan_pinjaman->update($validated);
+
+        // Jika jangka_pinjaman berubah, update juga di piutang yang sudah ada
+        if ($oldJangkaPinjaman != $validated['jangka_pinjaman']) {
+            $existingPiutang = Piutang::where('anggota_id', $validated['anggota_id'])
+                ->where('status_lunas', false)
+                ->first();
+
+            if ($existingPiutang) {
+                // Hitung ulang pembayaran per bulan
+                $newPembayaranPerbulan = 0;
+                if ($validated['jangka_pinjaman'] && $validated['jangka_pinjaman'] > 0) {
+                    $newPembayaranPerbulan = $existingPiutang->jumlah_pinjam / $validated['jangka_pinjaman'];
+                }
+
+                $existingPiutang->update([
+                    'jangka_pinjaman' => $validated['jangka_pinjaman'],
+                    'pembayaran_perbulan' => $newPembayaranPerbulan
+                ]);
+            }
+        }
 
         // If status changed to 'approved', create piutang and deduct from savings
         if ($validated['status'] === 'approved' && $oldStatus !== 'approved') {

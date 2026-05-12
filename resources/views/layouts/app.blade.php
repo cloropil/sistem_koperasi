@@ -47,6 +47,13 @@
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('pengajuan_pinjaman.index') }}">Pengajuan Pinjaman</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('dokumen.index') }}">Dokumen</a>
+                                </li>
+                            @else
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('dokumen.index') }}">Dokumen</a>
+                                </li>
                             @endif
                         @endauth
                     </ul>
@@ -124,5 +131,76 @@
             @yield('content')
         </main>
     </div>
+
+    <!-- Scripts -->
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+
+    <!-- Number Input Cleaner Script - Pure Numbers Only -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to clean pasted number input - only allow 0-9
+        function cleanNumberInput(input) {
+            // Remove all non-numeric characters
+            let cleaned = input.replace(/[^\d]/g, '');
+            
+            // Remove leading zeros except for single zero
+            if (cleaned.length > 1 && cleaned.charAt(0) === '0') {
+                cleaned = cleaned.replace(/^0+/, '') || '0';
+            }
+            
+            return cleaned;
+        }
+
+        // Handle paste event for all number inputs
+        document.addEventListener('paste', function(e) {
+            const target = e.target;
+            if (target && target.type === 'number') {
+                e.preventDefault();
+                
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                const cleanedValue = cleanNumberInput(pastedText);
+                
+                if (cleanedValue !== '') {
+                    target.value = cleanedValue;
+                    // Trigger input event to ensure validation works
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        });
+
+        // Handle input event to prevent invalid characters during typing
+        document.addEventListener('input', function(e) {
+            const target = e.target;
+            if (target && target.type === 'number') {
+                const originalValue = target.value;
+                const cleanedValue = cleanNumberInput(originalValue);
+                
+                if (originalValue !== cleanedValue) {
+                    target.value = cleanedValue;
+                }
+            }
+        });
+
+        // Handle blur event to ensure empty inputs stay empty (not 0)
+        document.addEventListener('blur', function(e) {
+            const target = e.target;
+            if (target && target.type === 'number') {
+                if (target.value === '0' && !target.required) {
+                    target.value = '';
+                }
+            }
+        });
+
+        // Handle focus event to clear placeholder zeros
+        document.addEventListener('focus', function(e) {
+            const target = e.target;
+            if (target && target.type === 'number') {
+                if (target.value === '0' && !target.required) {
+                    target.value = '';
+                }
+            }
+        });
+    });
+    </script>
 </body>
 </html>

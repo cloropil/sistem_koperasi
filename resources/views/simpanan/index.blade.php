@@ -10,8 +10,11 @@
                     {{ $message }}
                 </div>
             @endif
-            <a class="btn btn-primary mb-3" href="{{ route('simpanan.create') }}">Tambah Simpanan</a>
-            
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <a class="btn btn-primary" href="{{ route('simpanan.create') }}">Tambah Simpanan</a>
+                <a class="btn btn-success" href="{{ route('simpanan.export') }}">Export Excel</a>
+                <a class="btn btn-warning text-white" href="{{ route('simpanan.print') }}" target="_blank">Print</a>
+            </div>
             <!-- Accordion untuk pengelompokan jabatan -->
             <div class="accordion" id="simpananAccordion">
                 @foreach ($groupedSimpanans as $jabatanGroup => $simpanansGroup)

@@ -52,7 +52,7 @@
 
                 <div class="form-group mb-3">
                     <label for="jumlah_pengajuan">Jumlah Pengajuan</label>
-                    <input type="number" class="form-control" id="jumlah_pengajuan" name="jumlah_pengajuan" value="{{ $pengajuan->jumlah_pengajuan }}" step="0.01" required>
+                    <input type="number" class="form-control" id="jumlah_pengajuan" name="jumlah_pengajuan" value="{{ $pengajuan->jumlah_pengajuan }}" required>
                     <small class="text-danger d-none" id="warningMax">Nominal melebihi maksimal pinjaman!</small>
                 </div>
 

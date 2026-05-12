@@ -28,7 +28,7 @@
 
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Tambah Jadwal Pembayaran Manual</h5>
+                    <h5 class="mb-0">Tambah Jadwal Pembayaran</h5>
                 </div>
                 <div class="card-body">
                     @if($errors->any())
@@ -53,19 +53,19 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Jumlah Pembayaran</label>
-                            <input type="number" step="0.01" name="jumlah_pembayaran" id="jumlah_pembayaran" class="form-control" value="{{ old('jumlah_pembayaran') }}" readonly required>
+                            <input type="number" name="jumlah_pembayaran" id="jumlah_pembayaran" class="form-control" value="{{ old('jumlah_pembayaran') }}" readonly required>
                             <small class="text-muted">Otomatis dihitung: (Pinjaman ÷ Jangka Waktu) + (1% × Pinjaman)</small>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Jumlah Dibayar</label>
-                            <input type="number" step="0.01" name="jumlah_dibayar" class="form-control" value="{{ old('jumlah_dibayar') }}">
+                            <input type="number" name="jumlah_dibayar" class="form-control">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Tanggal Bayar</label>
                             <input type="date" name="tanggal_pembayaran" class="form-control" value="{{ old('tanggal_pembayaran') }}">
                         </div>
                         <div class="col-12">
-                            <button type="submit" class="btn btn-success">Tambah Jadwal Manual</button>
+                            <button type="submit" class="btn btn-success">Tambah Jadwal</button>
                             <p class="text-muted small mt-2">Jika jumlah dibayar diisi, sisa piutang akan otomatis berkurang.</p>
                         </div>
                     </form>
@@ -101,7 +101,7 @@
                                     <td>{{ $pembayaran->tanggal_jatuh_tempo->format('d-m-Y') }}</td>
                                     <td>Rp. {{ number_format($pembayaran->jumlah_pembayaran, 0, ',', '.') }}</td>
                                     <td>
-                                        <input type="number" step="0.01" name="jumlah_dibayar" class="form-control form-control-sm" value="{{ old('jumlah_dibayar', $pembayaran->jumlah_dibayar) }}" required>
+                                        <input type="number" name="jumlah_dibayar" class="form-control form-control-sm" value="{{ old('jumlah_dibayar', $pembayaran->jumlah_dibayar) }}" required>
                                     </td>
                                     <td>
                                         @if($pembayaran->status == 'lunas')
@@ -151,8 +151,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const interest = 0.01 * jumlahPinjam; // 1% of loan amount
         const totalPayment = basePayment + interest;
         
-        // Set the calculated value
-        document.getElementById('jumlah_pembayaran').value = totalPayment.toFixed(2);
+        // Round to nearest integer (pure number only)
+        document.getElementById('jumlah_pembayaran').value = Math.round(totalPayment);
     }
 });
 </script>

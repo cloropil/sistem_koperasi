@@ -31,12 +31,12 @@
                 
                 <div class="form-group mb-3">
                     <label for="simpanan_pokok">Simpanan Pokok</label>
-                    <input type="number" class="form-control" id="simpanan_pokok" name="simpanan_pokok" value="{{ $simpanan->simpanan_pokok }}" step="0.01" required>
+                    <input type="number" class="form-control" id="simpanan_pokok" name="simpanan_pokok" value="{{ $simpanan->simpanan_pokok }}" required>
                 </div>
 
                 <div class="form-group mb-3">
                     <label for="simpanan_wajib">Simpanan Wajib</label>
-                    <input type="number" class="form-control" id="simpanan_wajib" name="simpanan_wajib" value="{{ $simpanan->simpanan_wajib }}" step="0.01" required>
+                    <input type="number" class="form-control" id="simpanan_wajib" name="simpanan_wajib" value="{{ $simpanan->simpanan_wajib }}" required>
                 </div>
 
                 <button type="submit" class="btn btn-warning">Update</button>

@@ -52,7 +52,7 @@
 
                 <div class="form-group mb-3">
                     <label for="jumlah_pengajuan">Jumlah Pengajuan</label>
-                    <input type="number" class="form-control" id="jumlah_pengajuan" name="jumlah_pengajuan" value="0" step="0.01" required>
+                    <input type="number" class="form-control" id="jumlah_pengajuan" name="jumlah_pengajuan" min="1000000" placeholder="Minimal Rp 1.000.000" required>
                     <small class="text-danger d-none" id="warningMax">Nominal melebihi maksimal pinjaman!</small>
                 </div>
 
@@ -62,10 +62,15 @@
                         <option value="">Pilih Jangka Waktu</option>
                         <option value="3">3 Bulan</option>
                         <option value="6">6 Bulan</option>
+                        <option value="10">10 Bulan</option>
                         <option value="12">12 Bulan (1 Tahun)</option>
+                        <option value="20">20 Bulan</option>
                         <option value="24">24 Bulan (2 Tahun)</option>
+                        <option value="30">30 Bulan</option>
                         <option value="36">36 Bulan (3 Tahun)</option>
+                        <option value="40">40 Bulan</option>
                         <option value="48">48 Bulan (4 Tahun)</option>
+                        <option value="50">50 Bulan</option>
                         <option value="60">60 Bulan (5 Tahun)</option>
                     </select>
                 </div>
@@ -94,7 +99,7 @@
     })) !!};
 
     const simpananByAnggota = {!! json_encode($simpananByAnggota) !!};
-    const anggotaData = {!! json_encode($anggotas->map(function($a) { return ['id' => $a->id, 'jabatan' => $a->jabatan]; })) !!};
+    const anggotaData = {!! json_encode($anggotas->map(function($a) { return ['id' => $a->id, 'jabatan' => $a->jabatan, 'created_at' => $a->created_at->toISOString()]; })) !!};
 
     document.getElementById('anggota_id').addEventListener('change', function() {
         const anggotaId = parseInt(this.value);
@@ -139,12 +144,17 @@
             document.getElementById('simpananInfo').textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(simpananData.total);
 
             let maxPinjaman = 0;
-            if (jabatan === 'Militer' || jabatan === 'PNS') {
+            if (jabatan === 'Honorer') {
+                // Cek syarat: bergabung >=6 bulan dan saldo >=900.000
+                const sixMonthsAgo = new Date();
+                sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+                const joinedDate = new Date(anggota.created_at);
+                const isEligible = joinedDate <= sixMonthsAgo && simpananData.total >= 900000;
+                maxPinjaman = isEligible ? 1000000 : simpananData.total;
+            } else if (jabatan === 'Militer' || jabatan === 'PNS') {
                 maxPinjaman = 50000000;
             } else if (jabatan === 'PPPK') {
                 maxPinjaman = 30000000;
-            } else if (jabatan === 'Honorer') {
-                maxPinjaman = simpananData.total;
             }
 
             document.getElementById('maxPinjamanInfo').textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(maxPinjaman);
@@ -186,6 +196,14 @@
         // Reset alert
         submitAlert.classList.add('d-none');
         submitAlert.textContent = '';
+
+        if (nominal < 1000000) {
+            e.preventDefault();
+            submitAlert.textContent = 'Jumlah pengajuan minimal adalah Rp 1.000.000.';
+            submitAlert.classList.remove('d-none');
+            submitAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
+        }
 
         if (hasDebt) {
             e.preventDefault();

@@ -50,6 +50,7 @@ class PiutangController extends Controller
             'jumlah_pinjam' => 'required|numeric|min:0',
             'sisa_piutang' => 'required|numeric|min:0',
             'pembayaran_perbulan' => 'required|numeric|min:0',
+            'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
             'status_lunas' => 'required|boolean',
         ]);
 
@@ -89,6 +90,7 @@ class PiutangController extends Controller
             'jumlah_pinjam' => 'required|numeric|min:0',
             'sisa_piutang' => 'required|numeric|min:0',
             'pembayaran_perbulan' => 'required|numeric|min:0',
+            'jangka_pinjaman' => 'required|integer|in:3,6,12,24,36,48,60',
             'status_lunas' => 'required|boolean',
         ]);
 

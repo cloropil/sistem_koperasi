@@ -27,8 +27,34 @@ class SimpananController extends Controller
     public function index()
     {
         $simpanans = SimpananAnggota::with('anggota')->get();
-        
-        // Group simpanans by jabatan
+        $groupedSimpanans = $this->groupSimpanans($simpanans);
+
+        return view('simpanan.index', ['groupedSimpanans' => $groupedSimpanans, 'simpanans' => $simpanans]);
+    }
+
+    public function export()
+    {
+        $simpanans = SimpananAnggota::with('anggota')->get();
+        $groupedSimpanans = $this->groupSimpanans($simpanans);
+
+        $content = view('simpanan.export', compact('groupedSimpanans', 'simpanans'))->render();
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="simpanan.xls"',
+        ]);
+    }
+
+    public function print()
+    {
+        $simpanans = SimpananAnggota::with('anggota')->get();
+        $groupedSimpanans = $this->groupSimpanans($simpanans);
+
+        return view('simpanan.print', compact('groupedSimpanans', 'simpanans'));
+    }
+
+    private function groupSimpanans($simpanans)
+    {
         $groupedSimpanans = [
             'Militer & PNS' => [],
             'PPPK' => [],
@@ -37,7 +63,7 @@ class SimpananController extends Controller
 
         foreach ($simpanans as $simpanan) {
             $jabatan = $simpanan->anggota->jabatan;
-            
+
             if (in_array($jabatan, ['Militer', 'PNS'])) {
                 $groupedSimpanans['Militer & PNS'][] = $simpanan;
             } elseif ($jabatan === 'PPPK') {
@@ -47,7 +73,7 @@ class SimpananController extends Controller
             }
         }
 
-        return view('simpanan.index', ['groupedSimpanans' => $groupedSimpanans, 'simpanans' => $simpanans]);
+        return $groupedSimpanans;
     }
 
     /**

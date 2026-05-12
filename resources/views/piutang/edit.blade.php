@@ -24,34 +24,46 @@
                     <label for="anggota_id">Anggota</label>
                     <select class="form-control" id="anggota_id" name="anggota_id" required>
                         @foreach ($anggotas as $anggota)
-                            <option value="{{ $anggota->id }}" {{ $piutang->anggota_id == $anggota->id ? 'selected' : '' }}>{{ $anggota->nama }}</option>
+                            <option value="{{ $anggota->id }}" data-jabatan="{{ $anggota->jabatan }}" {{ $piutang->anggota_id == $anggota->id ? 'selected' : '' }}>
+                                {{ $anggota->nama }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
                 
                 <div class="form-group mb-3">
-                    <label for="jabatan">Jabatan</label>
-                    <select class="form-control" id="jabatan" name="jabatan" required>
-                        <option value="Militer" {{ $piutang->jabatan == 'Militer' ? 'selected' : '' }}>Militer</option>
-                        <option value="PNS" {{ $piutang->jabatan == 'PNS' ? 'selected' : '' }}>PNS (Pegawai Negeri Sipil)</option>
-                        <option value="PPPK" {{ $piutang->jabatan == 'PPPK' ? 'selected' : '' }}>PPPK (Pemerintah dengan Perjanjian Kerja)</option>
-                        <option value="Honorer" {{ $piutang->jabatan == 'Honorer' ? 'selected' : '' }}>Honorer</option>
-                    </select>
+                    <label for="jabatan_display">Jabatan</label>
+                    <input type="text" class="form-control" id="jabatan_display" value="{{ $piutang->jabatan }}" disabled>
+                    <input type="hidden" id="jabatan" name="jabatan" value="{{ $piutang->jabatan }}">
                 </div>
 
                 <div class="form-group mb-3">
                     <label for="jumlah_pinjam">Jumlah Pinjam</label>
-                    <input type="number" class="form-control" id="jumlah_pinjam" name="jumlah_pinjam" value="{{ $piutang->jumlah_pinjam }}" step="0.01" required>
+                    <input type="number" class="form-control" id="jumlah_pinjam" name="jumlah_pinjam" value="{{ $piutang->jumlah_pinjam }}" required>
                 </div>
 
                 <div class="form-group mb-3">
                     <label for="sisa_piutang">Sisa Piutang</label>
-                    <input type="number" class="form-control" id="sisa_piutang" name="sisa_piutang" value="{{ $piutang->sisa_piutang }}" step="0.01" required>
+                    <input type="number" class="form-control" id="sisa_piutang" name="sisa_piutang" value="{{ $piutang->sisa_piutang }}" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="jangka_pinjaman">Jangka Waktu (Bulan)</label>
+                    <select class="form-control" id="jangka_pinjaman" name="jangka_pinjaman" required>
+                        <option value="">Pilih Jangka Waktu</option>
+                        <option value="3" {{ $piutang->jangka_pinjaman == 3 ? 'selected' : '' }}>3 Bulan</option>
+                        <option value="6" {{ $piutang->jangka_pinjaman == 6 ? 'selected' : '' }}>6 Bulan</option>
+                        <option value="12" {{ $piutang->jangka_pinjaman == 12 ? 'selected' : '' }}>12 Bulan</option>
+                        <option value="24" {{ $piutang->jangka_pinjaman == 24 ? 'selected' : '' }}>24 Bulan</option>
+                        <option value="36" {{ $piutang->jangka_pinjaman == 36 ? 'selected' : '' }}>36 Bulan</option>
+                        <option value="48" {{ $piutang->jangka_pinjaman == 48 ? 'selected' : '' }}>48 Bulan</option>
+                        <option value="60" {{ $piutang->jangka_pinjaman == 60 ? 'selected' : '' }}>60 Bulan</option>
+                    </select>
                 </div>
 
                 <div class="form-group mb-3">
                     <label for="pembayaran_perbulan">Pembayaran Per Bulan</label>
-                    <input type="number" class="form-control" id="pembayaran_perbulan" name="pembayaran_perbulan" value="{{ $piutang->pembayaran_perbulan }}" step="0.01" required>
+                    <input type="number" class="form-control" id="pembayaran_perbulan" name="pembayaran_perbulan" value="{{ $piutang->pembayaran_perbulan }}" required>
                 </div>
 
                 <div class="form-group mb-3">
@@ -68,4 +80,17 @@
         </div>
     </div>
 </div>
+
+<script>
+    function updateJabatan() {
+        const anggotaSelect = document.getElementById('anggota_id');
+        const selectedOption = anggotaSelect.options[anggotaSelect.selectedIndex];
+        const jabatan = selectedOption ? selectedOption.dataset.jabatan || '' : '';
+        document.getElementById('jabatan_display').value = jabatan;
+        document.getElementById('jabatan').value = jabatan;
+    }
+
+    document.getElementById('anggota_id').addEventListener('change', updateJabatan);
+    document.addEventListener('DOMContentLoaded', updateJabatan);
+</script>
 @endsection
